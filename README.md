@@ -1,4 +1,4 @@
-# Claude Code Custom Skills
+# New Claude Skills
 
 Custom skills for Claude Code to enhance automation, web scraping, API integration, and project management.
 
@@ -51,16 +51,16 @@ Custom skills for Claude Code to enhance automation, web scraping, API integrati
 
 1. Clone this repository:
 ```bash
-git clone https://github.com/YOUR_USERNAME/claude-skills.git
+git clone https://github.com/amkniss/new-claude-skills.git
 ```
 
 2. Symlink or copy to Claude skills directory:
 ```bash
 # Symlink (recommended)
-ln -s /path/to/claude-skills/* ~/.claude/skills/
+ln -s /path/to/new-claude-skills/* ~/.claude/skills/
 
 # Or copy
-cp -r claude-skills/* ~/.claude/skills/
+cp -r new-claude-skills/* ~/.claude/skills/
 ```
 
 3. Skills are automatically loaded by Claude Code
@@ -74,7 +74,7 @@ Add the skills directory to your MCP configuration:
   "mcpServers": {
     "filesystem": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/claude-skills"]
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/new-claude-skills"]
     }
   }
 }
