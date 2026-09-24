@@ -693,28 +693,9 @@ for (const url of sampleUrls) {
 
 ## Integration with Other Tools
 
-### n8n Workflow
-```json
-{
-  "nodes": [
-    {
-      "name": "Playwright Scraper",
-      "type": "n8n-nodes-base.executeCommand",
-      "parameters": {
-        "command": "node scraper.js"
-      }
-    },
-    {
-      "name": "Filter Data",
-      "type": "n8n-nodes-base.filter"
-    },
-    {
-      "name": "Save to Supabase",
-      "type": "n8n-nodes-base.supabase"
-    }
-  ]
-}
-```
+### Scheduling/Orchestrating the Scraper
+
+Run the scraper as a script on a schedule (cron, or whatever the deployment target's scheduler is) by default. Only wrap it in n8n or Google Apps Script if that's explicitly requested for the trigger/orchestration layer — don't default to either.
 
 ### Claude AI Filtering
 ```javascript

@@ -1,6 +1,6 @@
 ---
 name: "Marketing Automation Specialist"
-description: "Expert marketing automation engineer specializing in email campaigns, lead nurturing, and client acquisition funnels. Master of Klaviyo, Resend, n8n workflows, and automated sequences. Builds systems that turn leads into clients on autopilot."
+description: "Expert marketing automation engineer specializing in email campaigns, lead nurturing, and client acquisition funnels. Master of Klaviyo and Resend via direct API calls, and automated sequences. Builds systems that turn leads into clients on autopilot. Does not assume n8n or any MCP — orchestration (n8n, Google Apps Script, or plain script/cron) is only used if explicitly requested."
 version: "1.0.0"
 dependencies: ""
 ---
@@ -143,18 +143,10 @@ async function addToList(email, listId, properties = {}) {
 }
 ```
 
-### 3. n8n (Workflow Automation)
-**Best for**: Complex workflows, multi-step automations
+### 3. Orchestration (only if explicitly requested)
+**Default**: none — sequences are driven by direct calls to Resend/Klaviyo APIs plus a plain script/cron for scheduling.
 
-**Capabilities**:
-- Visual workflow builder
-- Trigger-based automation
-- Data transformation
-- API integrations
-- Scheduled execution
-- Error handling
-
-**Pricing**: Self-hosted (free) or Cloud ($20/month)
+If the user explicitly wants a visual workflow builder for multi-step automation, n8n or Google Apps Script are options (`n8n-automation-expert` / `google-apps-script-expert`) — don't default to either.
 
 ## Email Sequences
 
@@ -327,13 +319,15 @@ Still thinking it over? Let's chat: [booking link]
 Amy
 ```
 
-## n8n Automation Workflows
+## Automation Workflows
+
+These are described as trigger → actions logic. Implement with a plain script/cron calling the Resend/Klaviyo APIs directly by default; use n8n or Google Apps Script only if that's explicitly what's wanted for the trigger/scheduling layer.
 
 ### Workflow 1: Lead Nurturing Automation
 
-**Trigger**: New lead added to Google Sheets
+**Trigger**: New lead added (source depends on where leads are captured — a form handler, a database insert trigger, etc. — not assumed to be Google Sheets)
 **Actions**:
-1. Add to email list (Resend/Klaviyo)
+1. Add to email list (Resend/Klaviyo, via direct API call)
 2. Send welcome email
 3. Wait 2 days
 4. Send value email
@@ -342,41 +336,7 @@ Amy
 7. Wait 2 days
 8. Send offer email
 9. If no response, mark as "cold"
-10. If response, notify via Slack
-
-**n8n Workflow JSON**:
-```json
-{
-  "nodes": [
-    {
-      "name": "Google Sheets Trigger",
-      "type": "n8n-nodes-base.googleSheetsTrigger",
-      "parameters": {
-        "sheetId": "your_sheet_id",
-        "event": "rowAdded"
-      }
-    },
-    {
-      "name": "Send Welcome Email",
-      "type": "n8n-nodes-base.emailSend",
-      "parameters": {
-        "fromEmail": "amy@yourdomain.com",
-        "toEmail": "={{ $json.email }}",
-        "subject": "Welcome! Here's what to expect...",
-        "text": "Email content here"
-      }
-    },
-    {
-      "name": "Wait 2 Days",
-      "type": "n8n-nodes-base.wait",
-      "parameters": {
-        "amount": 2,
-        "unit": "days"
-      }
-    }
-  ]
-}
-```
+10. If response, notify (Slack, only if that's the requested notification channel)
 
 ### Workflow 2: Re-engagement Automation
 
@@ -538,7 +498,7 @@ function personalizeEmail(template, lead) {
 **Action**: Send follow-up email
 
 ```javascript
-// n8n: Email opened webhook
+// Webhook handler (Resend/Klaviyo webhook → your own endpoint)
 {
   "trigger": "email.opened",
   "action": "send_followup",
@@ -548,10 +508,10 @@ function personalizeEmail(template, lead) {
 ```
 
 ### Trigger 2: Link Clicked
-**Action**: Mark as "hot lead", notify via Slack
+**Action**: Mark as "hot lead", notify (if a notification channel is configured)
 
 ```javascript
-// n8n: Link clicked webhook
+// Webhook handler (Resend/Klaviyo webhook → your own endpoint)
 {
   "trigger": "link.clicked",
   "action": "update_lead_status",
@@ -564,7 +524,7 @@ function personalizeEmail(template, lead) {
 **Action**: Remove from list, mark as invalid
 
 ```javascript
-// n8n: Email bounced webhook
+// Webhook handler (Resend/Klaviyo webhook → your own endpoint)
 {
   "trigger": "email.bounced",
   "action": "remove_from_list",

@@ -1,13 +1,12 @@
 ---
 name: "Klaviyo Engineer"
-description: "Klaviyo email marketing automation specialist. Expert in list management, segmentation, flow creation, campaign automation, personalization, and integration with external systems via MCP and n8n. Handles data import from workflows, event tracking, and advanced email marketing strategies."
+description: "Klaviyo email marketing automation specialist. Expert in list management, segmentation, flow creation, campaign automation, personalization, and event tracking via the Klaviyo API directly. Does not assume any MCP connection or n8n — writes direct API calls; use n8n-automation-expert or google-apps-script-expert only if explicitly requested for orchestration."
 version: "1.0.0"
-dependencies: "n8n-mcp"
 ---
 
 # Klaviyo Engineer
 
-Expert Klaviyo email marketing engineer specializing in automation, segmentation, personalization, and integration with e-commerce platforms and workflows.
+Expert Klaviyo email marketing engineer specializing in automation, segmentation, and personalization via direct calls to the Klaviyo API. This skill does not assume a Klaviyo MCP connection is available, and does not default to n8n for orchestration. If a task needs scheduling or cross-system syncing, ask which approach is wanted (n8n, Google Apps Script, or a plain script/cron) rather than assuming one.
 
 ## Klaviyo Expertise
 
@@ -216,161 +215,9 @@ const segment = {
 }
 ```
 
-### n8n Integration Workflows
+### Syncing Data Into Klaviyo
 
-#### Sync New Shopify Customers to Klaviyo
-```json
-{
-  "name": "Shopify → Klaviyo Customer Sync",
-  "nodes": [
-    {
-      "name": "Shopify Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "parameters": {
-        "path": "shopify-customer-created"
-      }
-    },
-    {
-      "name": "Extract Customer Data",
-      "type": "n8n-nodes-base.code",
-      "parameters": {
-        "jsCode": `
-          return [{
-            json: {
-              email: $json.customer.email,
-              first_name: $json.customer.first_name,
-              last_name: $json.customer.last_name,
-              phone: $json.customer.phone,
-              accepts_marketing: $json.customer.accepts_marketing,
-              total_spent: $json.customer.total_spent,
-              orders_count: $json.customer.orders_count
-            }
-          }];
-        `
-      }
-    },
-    {
-      "name": "Create Klaviyo Profile",
-      "type": "n8n-nodes-base.httpRequest",
-      "parameters": {
-        "url": "https://a.klaviyo.com/api/profiles/",
-        "method": "POST",
-        "authentication": "headerAuth",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "Klaviyo-API-Key {{$credentials.apiKey}}"
-            }
-          ]
-        },
-        "body": {
-          "data": {
-            "type": "profile",
-            "attributes": {
-              "email": "={{$json.email}}",
-              "first_name": "={{$json.first_name}}",
-              "last_name": "={{$json.last_name}}",
-              "properties": {
-                "source": "shopify",
-                "total_spent": "={{$json.total_spent}}"
-              }
-            }
-          }
-        }
-      }
-    },
-    {
-      "name": "Add to Welcome List",
-      "type": "n8n-nodes-base.httpRequest",
-      "parameters": {
-        "url": "https://a.klaviyo.com/api/lists/{{$env.KLAVIYO_WELCOME_LIST_ID}}/relationships/profiles/",
-        "method": "POST",
-        "body": {
-          "data": [{
-            "type": "profile",
-            "id": "={{$json.profile_id}}"
-          }]
-        }
-      }
-    }
-  ]
-}
-```
-
-#### Post-Purchase Follow-Up Campaign
-```json
-{
-  "name": "Post-Purchase Email Sequence",
-  "nodes": [
-    {
-      "name": "Order Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "parameters": {
-        "path": "order-placed"
-      }
-    },
-    {
-      "name": "Track Purchase Event",
-      "type": "n8n-nodes-base.httpRequest",
-      "parameters": {
-        "url": "https://a.klaviyo.com/api/events/",
-        "method": "POST",
-        "body": {
-          "data": {
-            "type": "event",
-            "attributes": {
-              "metric": {
-                "data": {
-                  "type": "metric",
-                  "attributes": { "name": "Placed Order" }
-                }
-              },
-              "profile": {
-                "data": {
-                  "type": "profile",
-                  "attributes": { "email": "={{$json.customer.email}}" }
-                }
-              },
-              "properties": {
-                "order_id": "={{$json.order_id}}",
-                "total": "={{$json.total_price}}",
-                "items": "={{$json.line_items}}"
-              }
-            }
-          }
-        }
-      }
-    },
-    {
-      "name": "Wait 3 Days",
-      "type": "n8n-nodes-base.wait",
-      "parameters": {
-        "amount": 3,
-        "unit": "days"
-      }
-    },
-    {
-      "name": "Send Review Request Email",
-      "type": "n8n-nodes-base.httpRequest",
-      "parameters": {
-        "url": "https://a.klaviyo.com/api/campaigns/",
-        "method": "POST",
-        "body": {
-          "template_id": "REVIEW_REQUEST_TEMPLATE",
-          "recipients": [{
-            "email": "={{$json.customer.email}}"
-          }],
-          "context": {
-            "order_id": "={{$json.order_id}}",
-            "products": "={{$json.line_items}}"
-          }
-        }
-      }
-    }
-  ]
-}
-```
+To sync a new Shopify customer into Klaviyo, or track a purchase event, or trigger a post-purchase follow-up: call the Shopify Admin API (or whatever the data source is) to get the record, then call the Klaviyo API directly — `POST /api/profiles/`, `POST /api/lists/{id}/relationships/profiles/`, `POST /api/events/` (see examples above). This is plain API-to-API code with no orchestration platform assumed. Only wrap it in n8n or Google Apps Script if that's explicitly what's wanted for the trigger/schedule.
 
 ### Advanced Personalization
 
@@ -458,20 +305,9 @@ const stats = {
 
 ## Integration Patterns
 
-### Shopify + Klaviyo + n8n
-```json
-{
-  "name": "Complete E-commerce Email Automation",
-  "triggers": [
-    "New customer → Welcome series",
-    "Product viewed → Browse abandonment",
-    "Cart abandoned → Recovery sequence",
-    "Order placed → Thank you + upsell",
-    "Order shipped → Tracking info",
-    "Order delivered → Review request"
-  ]
-}
-```
+### Shopify + Klaviyo Event Triggers
+
+A full e-commerce email program maps store events to Klaviyo flows/events via direct API calls: new customer → create profile + add to welcome list, product viewed → track event, cart abandoned → track event (Klaviyo's own flow logic handles the recovery sequence), order placed/shipped/delivered → track event. Each of these is a Klaviyo `POST /api/events/` or `POST /api/profiles/` call triggered by whatever event source is in place — no orchestration platform assumed unless requested.
 
 ### Supabase + Klaviyo
 ```typescript
@@ -504,7 +340,6 @@ supabase
 - ✅ Email flow automation
 - ✅ Template design and personalization
 - ✅ Event tracking implementation
-- ✅ n8n workflow integration
 - ✅ Analytics and reporting
 - ✅ A/B testing setup
 
@@ -515,9 +350,8 @@ Activates for:
 - Email flow creation
 - List and segment management
 - Event tracking setup
-- n8n workflow integration
 - Campaign creation
 - Personalization implementation
 - Performance analytics
 
-Provides production-ready Klaviyo email automation with best practices.
+Provides production-ready Klaviyo email automation via direct API calls, with best practices. Does not assume an MCP connection or any particular orchestration tool — if scheduling/orchestration is needed, ask which approach to use rather than defaulting to one.

@@ -1,13 +1,12 @@
 ---
 name: "Shopify Engineer"
-description: "Shopify specialist expert in product management, blog post creation, inventory sync, and automation via MCP integration and n8n workflows. Handles bulk operations, SEO optimization, metafields, and integrates with external systems for automated content publishing and product updates."
+description: "Shopify specialist expert in product management, blog post creation, inventory sync, and automation via the Shopify Admin API (REST/GraphQL). Handles bulk operations, SEO optimization, and metafields. Does not assume any MCP connection or n8n — writes direct API calls; use n8n-automation-expert or google-apps-script-expert only if explicitly requested for orchestration."
 version: "1.0.0"
-dependencies: "n8n-mcp"
 ---
 
 # Shopify Engineer
 
-Expert Shopify engineer specializing in product management, content creation, automation workflows, and integration with external systems via MCP and n8n.
+Expert Shopify engineer specializing in product management, content creation, and automation via direct calls to the Shopify Admin API. This skill writes code against the API itself — it does not assume a Shopify MCP connection is available, and does not default to n8n for orchestration. If a task needs scheduling or cross-system orchestration, ask which approach is wanted (n8n, Google Apps Script, or a plain script/cron) rather than assuming one.
 
 ## Core Capabilities
 
@@ -109,188 +108,11 @@ const response = await shopifyAPI.post(
 )
 ```
 
-### Automation with n8n
+### Scheduled/Automated Operations
 
-#### Product Upload Workflow
-```json
-{
-  "name": "AI Product Description to Shopify",
-  "nodes": [
-    {
-      "name": "Webhook Trigger",
-      "type": "n8n-nodes-base.webhook",
-      "parameters": {
-        "path": "new-product",
-        "responseMode": "responseNode"
-      }
-    },
-    {
-      "name": "Generate Description (OpenAI)",
-      "type": "n8n-nodes-base.openAi",
-      "parameters": {
-        "operation": "create",
-        "model": "gpt-4",
-        "prompt": "Generate SEO-optimized product description for: {{$json.product_name}}"
-      }
-    },
-    {
-      "name": "Generate Keywords",
-      "type": "n8n-nodes-base.code",
-      "parameters": {
-        "jsCode": "return { tags: extractKeywords($json.description) }"
-      }
-    },
-    {
-      "name": "Create Shopify Product",
-      "type": "n8n-nodes-base.shopify",
-      "parameters": {
-        "operation": "create",
-        "resource": "product",
-        "title": "={{$json.product_name}}",
-        "bodyHtml": "={{$json.description}}",
-        "tags": "={{$json.tags}}"
-      }
-    },
-    {
-      "name": "Send Confirmation",
-      "type": "n8n-nodes-base.slack",
-      "parameters": {
-        "message": "✅ Product created: {{$json.title}}"
-      }
-    }
-  ]
-}
-```
+Product uploads, blog publishing, and inventory sync are all just calls to the API blocks above, triggered on some schedule or event. This skill does not assume how that triggering happens — if the task needs a schedule or an event trigger, ask whether it should be a plain script (cron + this API code), n8n, or Google Apps Script, rather than defaulting to any one of them.
 
-#### Blog Post from Content Calendar
-```json
-{
-  "name": "Auto-Publish Blog Posts",
-  "nodes": [
-    {
-      "name": "Schedule Trigger",
-      "type": "n8n-nodes-base.cron",
-      "parameters": {
-        "triggerTimes": {
-          "hour": 9,
-          "minute": 0,
-          "dayOfWeek": [1, 3, 5]
-        }
-      }
-    },
-    {
-      "name": "Get Scheduled Posts (Airtable)",
-      "type": "n8n-nodes-base.airtable",
-      "parameters": {
-        "operation": "list",
-        "filterByFormula": "AND(IS_SAME({Publish Date}, TODAY()), {Status} = 'Ready')"
-      }
-    },
-    {
-      "name": "Generate SEO Meta (AI)",
-      "type": "n8n-nodes-base.openAi",
-      "parameters": {
-        "prompt": "Create SEO-optimized meta description (max 160 chars) for: {{$json.title}}"
-      }
-    },
-    {
-      "name": "Upload to Shopify Blog",
-      "type": "n8n-nodes-base.shopify",
-      "parameters": {
-        "resource": "article",
-        "operation": "create",
-        "blogId": "{{$json.blog_id}}",
-        "title": "={{$json.title}}",
-        "bodyHtml": "={{$json.content}}",
-        "author": "={{$json.author}}",
-        "tags": "={{$json.tags}}",
-        "published": true
-      }
-    },
-    {
-      "name": "Update Airtable Status",
-      "type": "n8n-nodes-base.airtable",
-      "parameters": {
-        "operation": "update",
-        "id": "={{$json.record_id}}",
-        "fields": {
-          "Status": "Published",
-          "Shopify URL": "={{$json.url}}"
-        }
-      }
-    }
-  ]
-}
-```
-
-### Inventory Sync Workflow
-
-```json
-{
-  "name": "Sync Inventory from Supplier API",
-  "nodes": [
-    {
-      "name": "Schedule Every Hour",
-      "type": "n8n-nodes-base.cron",
-      "parameters": {
-        "triggerTimes": {
-          "minute": 0
-        }
-      }
-    },
-    {
-      "name": "Fetch Supplier Inventory",
-      "type": "n8n-nodes-base.httpRequest",
-      "parameters": {
-        "url": "https://supplier-api.com/inventory",
-        "authentication": "headerAuth",
-        "method": "GET"
-      }
-    },
-    {
-      "name": "Transform Data",
-      "type": "n8n-nodes-base.code",
-      "parameters": {
-        "jsCode": `
-          const items = [];
-          for (const item of $input.all()) {
-            items.push({
-              sku: item.json.product_sku,
-              inventory_quantity: item.json.stock_count,
-              inventory_item_id: item.json.shopify_inventory_id
-            });
-          }
-          return items;
-        `
-      }
-    },
-    {
-      "name": "Update Shopify Inventory",
-      "type": "n8n-nodes-base.shopify",
-      "parameters": {
-        "resource": "inventoryLevel",
-        "operation": "update",
-        "inventoryItemId": "={{$json.inventory_item_id}}",
-        "available": "={{$json.inventory_quantity}}"
-      }
-    },
-    {
-      "name": "Log Changes",
-      "type": "n8n-nodes-base.supabase",
-      "parameters": {
-        "operation": "insert",
-        "table": "inventory_sync_log",
-        "data": {
-          "sku": "={{$json.sku}}",
-          "old_quantity": "={{$json.old_qty}}",
-          "new_quantity": "={{$json.inventory_quantity}}",
-          "synced_at": "={{$now}}"
-        }
-      }
-    }
-  ]
-}
-```
+For example, an hourly inventory sync from a supplier is: fetch supplier data → transform to Shopify's format → call the Shopify Admin API's inventory GraphQL mutation (see Bulk Operations below) — wired up with whatever trigger mechanism was actually requested.
 
 ### Bulk Operations
 
@@ -375,38 +197,8 @@ const seoOptimizedProduct = {
 ### Integration Patterns
 
 #### Klaviyo → Shopify Product Recommendations
-```json
-{
-  "name": "Send Personalized Product Emails",
-  "nodes": [
-    {
-      "name": "Get Customer Segments (Klaviyo)",
-      "type": "n8n-nodes-base.httpRequest"
-    },
-    {
-      "name": "Fetch Recommended Products (Shopify)",
-      "type": "n8n-nodes-base.shopify",
-      "parameters": {
-        "operation": "getAll",
-        "resource": "product",
-        "filters": "={{$json.recommended_tags}}"
-      }
-    },
-    {
-      "name": "Send via Klaviyo",
-      "type": "n8n-nodes-base.httpRequest",
-      "parameters": {
-        "url": "https://a.klaviyo.com/api/campaigns",
-        "method": "POST",
-        "body": {
-          "template_id": "xyz",
-          "products": "={{$json.products}}"
-        }
-      }
-    }
-  ]
-}
-```
+
+Fetch a customer's segment/recommendation data via a direct call to the Klaviyo API (see `klaviyo-engineer`), fetch matching products via the Shopify Admin GraphQL API (query by tags/collection), then send the campaign via a direct Klaviyo API call. This is plain API-to-API code — no orchestration platform is assumed. Only reach for n8n or Google Apps Script here if that's explicitly what's wanted for scheduling/triggering.
 
 ## Best Practices
 
@@ -428,9 +220,7 @@ Activates for:
 - Blog post publishing
 - Inventory synchronization
 - Bulk operations
-- n8n workflow creation for Shopify
-- MCP integration setup
 - SEO optimization
 - Metafield management
 
-Provides production-ready Shopify integrations and automations.
+Provides production-ready Shopify integrations via direct Admin API (REST/GraphQL) calls. Does not assume an MCP connection or any particular orchestration tool — if scheduling/orchestration is needed, ask which approach to use rather than defaulting to one.

@@ -2,7 +2,7 @@
 name: "Debugging & Troubleshooting Expert"
 description: "Master debugger and troubleshooting specialist. Systematically diagnoses issues across frontend, backend, database, API integrations, and deployment. Expert in root cause analysis, live debugging, log analysis, and rapid issue resolution with comprehensive documentation."
 version: "1.0.0"
-dependencies: "supabase-mcp, n8n-mcp"
+dependencies: "supabase-mcp"
 ---
 
 # Debugging & Troubleshooting Expert
@@ -242,7 +242,7 @@ async function debugFetch(url: string, options?: RequestInit) {
 }
 ```
 
-### Workflow Debugging (n8n)
+### Workflow Debugging (n8n — reference only, use when n8n is actually in the stack)
 
 #### n8n Workflow Debugging
 ```javascript

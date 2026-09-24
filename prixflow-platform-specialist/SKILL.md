@@ -2,7 +2,7 @@
 name: "PrixFlow Platform Specialist"
 description: "Expert specialist for the PrixFlow lead generation and client onboarding platform. Deep knowledge of the platform's architecture, onboarding workflows, intelligence analysis system, content generation pipeline, and all integrations. Handles platform-specific debugging, optimization, and feature development."
 version: "1.0.0"
-dependencies: "supabase-mcp, n8n-mcp"
+dependencies: "supabase-mcp"
 ---
 
 # PrixFlow Platform Specialist

@@ -1,6 +1,6 @@
 ---
 name: "Project Organizer"
-description: "Intelligent project scaffolding agent that creates production-ready project structures using templates from /Users/amy/Development/project-templates. Automatically sets up Next.js, Supabase, n8n automation projects, and more with proper configuration, directory structure, and AI assistant rules."
+description: "Intelligent project scaffolding agent that creates production-ready project structures using templates from /Users/amy/Development/project-templates. Automatically sets up Next.js, Supabase, automation projects, and more with proper configuration, directory structure, and AI assistant rules. Does not assume n8n, Google Sheets/Drive, or any MCP as the automation/storage engine — asks which one is wanted."
 version: "1.0.0"
 dependencies: ""
 ---
@@ -12,7 +12,7 @@ Autonomous project scaffolding specialist that transforms "let's start a new pro
 ## Core Purpose
 
 When a user says "let's start a new project", this skill:
-1. Determines project type (Next.js app, n8n automation, scraper, dashboard, etc.)
+1. Determines project type (Next.js app, automation, scraper, dashboard, etc.) — for an automation project, asks which engine to scaffold for (n8n, Google Apps Script, or a plain script/cron) rather than assuming one
 2. Uses templates from `/Users/amy/Development/project-templates/`
 3. Creates proper directory structure with all configuration files
 4. Sets up AI assistant rules (codex.config, .cursor/rules.md)
@@ -49,24 +49,25 @@ project-name/
 └── public/            # Static assets
 ```
 
-### 2. n8n Automation Project
+### 2. Automation Project
 **Use Case**: Lead generation, data scraping, workflow automation
 
+**Ask first which engine this is for** — n8n, Google Apps Script, or a plain script/cron job calling APIs directly — and scaffold accordingly. Don't default to n8n.
+
 **Includes**:
-- n8n workflow templates
-- Configuration for n8n Cloud API
-- Environment setup for n8n webhooks
-- Data storage structure (Google Sheets, Supabase, etc.)
+- Workflow/script templates for the chosen engine
+- Environment setup for whatever triggers/webhooks that engine uses
+- Data storage structure (Supabase, a plain DB, or Google Sheets — only if explicitly requested)
 - Testing protocol docs
 - Search term strategy templates
 - Lead scoring prompts
 
-**Directory Structure**:
+**Directory Structure** (n8n example — adjust for the chosen engine):
 ```
 project-name/
-├── workflows/         # n8n workflow JSONs
+├── workflows/         # n8n workflow JSONs (or scripts/ for a plain-script engine)
 ├── prompts/           # Claude AI prompts for filtering
-├── config/            # n8n configuration
+├── config/            # engine configuration
 ├── data/              # Test data and results
 ├── docs/              # Strategy and setup docs
 └── scripts/           # Helper scripts
@@ -153,7 +154,7 @@ project-name/
 
 2. **Select appropriate template**:
    - Web app → `create-project.sh`
-   - Automation → n8n template
+   - Automation → ask which engine (n8n / Apps Script / plain script), then use that template
    - Scraper → Playwright template
    - Dashboard → dashboard template
    - API → integration template
@@ -181,18 +182,18 @@ project-name/
 **Example**: "I need a lead generation system with Upwork scraping"
 
 **Steps**:
-1. **Identify project type**: n8n automation + Playwright scraping
+1. **Identify project type**: automation + Playwright scraping — ask which automation engine to use (n8n, Apps Script, or a plain script) rather than assuming n8n
 2. **Create hybrid structure**:
-   - Use n8n template for workflows
+   - Use the chosen engine's template for workflows
    - Add Playwright scrapers
    - Include data storage
    - Set up Claude AI filtering
 
 3. **Pre-configure**:
    - Upwork Apify Actor configuration
-   - n8n workflow with scraper node
+   - Scraper wired into the chosen automation engine
    - Lead scoring prompts
-   - Google Sheets connection
+   - Data storage connection (Supabase, plain DB, or Google Sheets — only if requested)
 
 4. **Document strategy**:
    - Search term recommendations
@@ -221,9 +222,9 @@ project-name/
 - Vercel for deployment
 
 ### For Automation:
-- n8n Cloud (not self-hosted)
+- Engine: ask (n8n, Google Apps Script, or a plain script/cron) — don't default to n8n
 - Claude API for filtering
-- Google Sheets for storage
+- Storage: Supabase or a plain DB by default; Google Sheets only if requested
 - Slack for notifications
 - Scheduled triggers (daily)
 
@@ -396,11 +397,11 @@ feat: initial project setup with standard structure and configuration
 ## Project-Specific Customizations
 
 ### For Lead Generation:
-- Add `workflows/lead-generation.json`
+- Add workflow/script for the chosen automation engine
 - Add `prompts/lead-scoring.txt`
 - Add `docs/search-strategy.md`
 - Configure Apify Actors
-- Set up Google Sheets connection
+- Set up data storage connection (Supabase/plain DB by default; Google Sheets only if requested)
 
 ### For E-commerce:
 - Add `src/components/products/`
@@ -430,10 +431,10 @@ feat: initial project setup with standard structure and configuration
 
 **Setup**:
 1. Create hybrid project structure
-2. Add n8n workflow template
+2. Add workflow/script template for the chosen automation engine (n8n / Apps Script / plain script — ask, don't assume)
 3. Add Playwright scrapers
 4. Configure Claude AI filtering
-5. Set up data storage (Supabase + Sheets)
+5. Set up data storage (Supabase by default; Sheets only if requested)
 6. Add monitoring (Slack notifications)
 
 ### Pattern: Dashboard + Real-time Data
@@ -467,9 +468,9 @@ cd /Users/amy/Development
 mkdir lead-generation-system
 cd lead-generation-system
 
-# Use n8n template
+# Ask which automation engine first (n8n / Apps Script / plain script) — don't assume n8n
 mkdir -p workflows prompts config data docs scripts
-# Copy n8n workflow template
+# Add the workflow/script template for the chosen engine
 # Add Claude prompts
 # Create documentation
 ```
@@ -538,7 +539,8 @@ mkdir -p scrapers config data logs
 
 - **Lead Generation Skill**: Automatically create lead generation projects
 - **Web Scraping Skill**: Set up scraper projects
-- **n8n Automation Skill**: Create n8n workflow projects
+- **n8n Automation Skill**: Create n8n workflow projects, only when n8n is the explicitly chosen engine
+- **Google Apps Script Expert Skill**: Create Apps Script automation projects, only when explicitly chosen
 - **Supabase Skill**: Configure Supabase integration
 - **Dashboard Builder Skill**: Set up dashboard projects
 

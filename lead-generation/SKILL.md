@@ -1,6 +1,6 @@
 ---
 name: "Lead Generation System Builder"
-description: "Automated lead generation specialist that designs and builds systems to scrape job postings, service requests, and pain point discussions from multiple platforms. Expert in n8n workflows, Apify integration, Claude AI filtering, and lead enrichment with Apollo.io/Hunter.io."
+description: "Automated lead generation specialist that designs and builds systems to scrape job postings, service requests, and pain point discussions from multiple platforms. Expert in Apify integration, Claude AI filtering, and lead enrichment with Apollo.io/Hunter.io via direct API calls. Does not assume n8n, Google Sheets, or any MCP — the orchestration engine and storage are chosen per request, not defaulted."
 version: "1.0.0"
 dependencies: ""
 ---
@@ -18,7 +18,8 @@ This skill enables Claude to design, build, and deploy automated lead generation
 - **Search Strategy**: Identify high-intent keywords vs noise
 - **Sentiment Analysis**: Filter service providers from service seekers
 
-### 2. Workflow Architecture (n8n)
+### 2. Workflow Architecture
+- **Engine**: ask which one is wanted (n8n, Google Apps Script, or a plain script/cron) — don't default to n8n
 - **Trigger Types**: Schedule-based, webhook-based, manual
 - **Data Flow Design**: Multi-source → Filter → Enrich → Score → Deliver
 - **Error Handling**: Retry logic, fallback sources, notification systems
@@ -72,7 +73,8 @@ This skill enables Claude to design, build, and deploy automated lead generation
 
 ## Technical Implementation
 
-### n8n Workflow Structure
+### Workflow Structure
+This is the logic, independent of engine — implement it as a plain script/cron by default, or as n8n/Apps Script only if explicitly requested:
 ```
 [Schedule Trigger]
   ↓
@@ -95,9 +97,9 @@ This skill enables Claude to design, build, and deploy automated lead generation
   ├── [Warm Leads] → CRM queue
   └── [Cold Leads] → Nurture sequence
   ↓
-[Save to Google Sheets]
+[Save results] (destination — DB, CSV, or Google Sheets — only if requested)
   ↓
-[Slack Notification]
+[Notification] (only if a channel is configured)
 ```
 
 ### Claude AI Prompts for Filtering
@@ -229,14 +231,11 @@ NOT ("I offer" OR "my services" OR "check out my")
 ### Essential (For First Test Run)
 1. **Apify**: $5 free credit (enough for 1 test run)
    - Sign up: https://apify.com/sign-up
-   
-2. **n8n Cloud**: Free trial or $20/month
-   - Sign up: https://n8n.io
 
-3. **Anthropic API**: $5 free credit
+2. **Anthropic API**: $5 free credit
    - Get key: https://console.anthropic.com
 
-4. **Google Account**: Free (for Sheets)
+3. **Orchestration/storage accounts**: only what's needed for the engine actually chosen — none required for a plain script writing to a local DB/CSV; n8n Cloud or a Google account only if n8n or Sheets was explicitly requested
 
 ### Optional (For Enrichment)
 5. **Apollo.io**: 50 free credits/month, then $49/month
@@ -249,7 +248,7 @@ NOT ("I offer" OR "my services" OR "check out my")
 
 ### Total Cost for ONE Test Run
 - Apify: $0 (uses free credit)
-- n8n: $0 (14-day trial)
+- Orchestration: $0 (plain script) unless n8n/Sheets is explicitly requested
 - Claude API: $0.15 (for 50 lead analyses)
 - **Total: ~$0.15** 
 
@@ -370,7 +369,7 @@ NOT ("I offer" OR "my services" OR "check out my")
 
 When user confirms their niche and goals, use this skill to:
 1. Create custom search term list for their specific niche
-2. Build the complete n8n workflow JSON
+2. Build the complete automation (a plain script by default; n8n or Google Apps Script only if explicitly requested)
 3. Configure Claude prompts for their filtering needs
 4. Set up testing protocol specific to their timeline
 5. Provide realistic conversion expectations for their sector

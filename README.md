@@ -2,18 +2,22 @@
 
 Custom skills for Claude Code to enhance automation, web scraping, API integration, and project management.
 
+## Standing rule: no MCP, no default orchestration tool
+
+None of these skills assume an MCP connection for Shopify, Klaviyo, or any Google product (Sheets, Drive, Apps Script, Analytics, Ads, etc.). Every integration is written as direct API calls (REST/GraphQL). Similarly, n8n and Google Apps Script are both opt-in orchestration engines — a skill that needs scheduling/triggering asks which one is wanted (or defaults to a plain script/cron) rather than assuming either.
+
 ## Skills Included
 
 ### Lead Generation & Automation
-- **lead-generation** - Automated lead generation system builder with n8n, Apify, and Claude AI filtering
+- **lead-generation** - Automated lead generation system builder with Apify and Claude AI filtering, via direct API calls (n8n only if explicitly requested)
 - **web-scraping-specialist** - Playwright, Beautiful Soup, and Apify expert for ethical web scraping
 - **api-integration-specialist** - Apollo.io, Hunter.io, Clearbit integration for lead enrichment
 
 ### Marketing & E-commerce
-- **marketing-automation-specialist** - Email campaigns, lead nurturing, and client acquisition funnels
+- **marketing-automation-specialist** - Email campaigns, lead nurturing, and client acquisition funnels via direct Klaviyo/Resend API calls
 - **shopify-data-mapper** - Map and upload data to Shopify (products, variants, blog posts)
-- **shopify-engineer** - Shopify product management and automation
-- **klaviyo-engineer** - Email marketing automation with Klaviyo
+- **shopify-engineer** - Shopify product management and automation via the Shopify Admin API directly (no MCP assumed)
+- **klaviyo-engineer** - Email marketing automation with Klaviyo via the Klaviyo API directly (no MCP assumed)
 
 ### Development & Infrastructure
 - **project-organizer** - Intelligent project scaffolding with templates
@@ -22,7 +26,8 @@ Custom skills for Claude Code to enhance automation, web scraping, API integrati
 - **senior-project-creator** - Production-ready project setup
 
 ### Automation & Integration
-- **n8n-automation-expert** - n8n workflow architecture and automation
+- **n8n-automation-expert** - n8n workflow architecture and automation; invoke explicitly, not a default
+- **google-apps-script-expert** - Google Apps Script automation and spreadsheet-driven tools; invoke explicitly, not a default
 - **cicd-devops-engineer** - DevOps and CI/CD automation
 - **supabase-database-expert** - Supabase database design and optimization
 - **supabase-edge-functions-specialist** - Supabase Edge Functions deployment
@@ -88,6 +93,7 @@ Skills are automatically referenced by Claude Code based on your requests:
 - "Scrape Indeed for jobs" → Uses `web-scraping-specialist`
 - "Map CSV to Shopify" → Uses `shopify-data-mapper`
 - "Build an email sequence" → Uses `marketing-automation-specialist`
+- "Automate this with n8n" / "Write this as an Apps Script" → Uses `n8n-automation-expert` / `google-apps-script-expert` (only when named explicitly)
 
 ## Contributing
 
