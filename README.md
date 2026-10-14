@@ -48,7 +48,9 @@ None of these skills assume an MCP connection for Shopify, Klaviyo, or any Googl
 - **web-app-builder** - Full-stack web application development
 - **prixflow-platform-specialist** - PrixFlow platform-specific expertise
 - **backup-disaster-recovery** - Backup strategies and recovery procedures
-- **skill-agent-factory** - Autonomous agent and skill generator
+
+### Meta-skills (not installed by default — see below)
+- **meta-skills/skill-agent-factory** - Describes itself as an autonomous skill/agent generator that acts without being asked. Kept in the repo for reference, deliberately excluded from the normal install so it can't run unsupervised. Only move it into your active skills directory if you specifically want that behavior and plan to supervise it closely.
 
 ## Installation
 
@@ -59,7 +61,7 @@ None of these skills assume an MCP connection for Shopify, Klaviyo, or any Googl
 git clone https://github.com/amkniss/new-claude-skills.git
 ```
 
-2. Symlink or copy to Claude skills directory:
+2. Symlink or copy to Claude skills directory — note the glob only covers top-level skill folders, so `meta-skills/` (and anything inside it) is **not** picked up:
 ```bash
 # Symlink (recommended)
 ln -s /path/to/new-claude-skills/* ~/.claude/skills/
@@ -68,7 +70,7 @@ ln -s /path/to/new-claude-skills/* ~/.claude/skills/
 cp -r new-claude-skills/* ~/.claude/skills/
 ```
 
-3. Skills are automatically loaded by Claude Code
+3. Skills are automatically loaded by Claude Code. To deliberately enable a meta-skill, symlink/copy it individually: `ln -s /path/to/new-claude-skills/meta-skills/skill-agent-factory ~/.claude/skills/skill-agent-factory`
 
 ### For Claude Desktop
 
